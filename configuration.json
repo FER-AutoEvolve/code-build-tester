@@ -1,0 +1,16 @@
+{
+    "FastApi": {
+        "Host": "0.0.0.0",
+        "Port": 2000
+    },
+    "CodeBuilder": {
+        "CodebaseStagingDirectory": "./codebase_staging",
+        "CodebaseDirectory": "./codebase",
+        "CodebaseBuildDirectory": "./codebase_build",
+        "CodeBuilderType": "NPM_VITE"
+    },
+    "KeypointNotification": {
+        "Enabled": true,
+        "Endpoint": "http://game-web-wrapper:8001/notify-of-event"
+    }
+}

@@ -1,0 +1,16 @@
+{
+    "FastApi": {
+        "Host": "${FASTAPI_HOST}",
+        "Port": ${FASTAPI_PORT}
+    },
+    "CodeBuilder": {
+        "CodebaseStagingDirectory": "${CODE_STAGING_DIRECTORY}",
+        "CodebaseDirectory": "${CODE_DIRECTORY}",
+        "CodebaseBuildDirectory": "${CODE_BUILD_DIRECTORY}",
+        "CodeBuilderType": "${CODE_BUILDER_TYPE}"
+    },
+    "KeypointNotification": {
+        "Enabled": ${KEYPOINT_NOTIFICATION_ENABLED},
+        "Endpoint": "${KEYPOINT_NOTIFICATION_ENDPOINT}"
+    }
+}
