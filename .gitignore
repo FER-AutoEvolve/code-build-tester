@@ -211,6 +211,6 @@ __marimo__/
 configuration.*.json
 !configuration.template.json
 
-./codebase
-./codebase_staging
-./codebase_build
+/codebase
+/codebase_staging
+/codebase_build
