@@ -8,10 +8,10 @@ class NpmViteCodeBuilder(CodeBuilder):
         try:
             self._logger.info("Started NPM Vite build procedure")
             # copy all files in tree from codebase to codebase_build
-            shutil.copytree(self._configuration.codebase_directory, self._configuration.codebase_build_directory)
+            shutil.copytree(self._configuration.codebase_directory, self._configuration.codebase_build_directory, dirs_exist_ok=True)
             self._logger.info("Copied codebase files to build directory")
             # copy all files in tree from codebase_staging to codebase_build
-            shutil.copytree(self._configuration.codebase_staging_directory, self._configuration.codebase_build_directory)
+            shutil.copytree(self._configuration.codebase_staging_directory, self._configuration.codebase_build_directory, dirs_exist_ok=True)
             self._logger.info("Copied staging files to build directory")
             # build with npm and listen to the print
             self._logger.info("Initiating NPM Vite build")
