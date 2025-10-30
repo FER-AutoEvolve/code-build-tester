@@ -7,9 +7,9 @@ import pathlib
 class NpmViteCodeBuilder(CodeBuilder):
 
     __BUILD_COMMANDS__ = [
-        ["npm", "install"],
-        ["npx", "tsc", "-p", "tsconfig.json", "--noEmit", "--noUnusedLocals", "false", "--noUnusedParameters", "false"],
-        ["npx", "vite", "build"],
+        "npm install",
+        "npx tsc -p ./tsconfig.json --noEmit --noUnusedLocals false --noUnusedParameters false",
+        "npx vite build",
     ]
 
     def build(self) -> Result[Unit]:
@@ -28,7 +28,7 @@ class NpmViteCodeBuilder(CodeBuilder):
 
             absolute_build_dir_path = str(pathlib.Path(self._configuration.codebase_build_directory).absolute())
             for cmd in self.__BUILD_COMMANDS__:
-                self._logger.info(f"Running: {' '.join(cmd)}")
+                self._logger.info(f"Running: {cmd}")
                 proc = subprocess.run(
                     cmd,
                     cwd=absolute_build_dir_path,
