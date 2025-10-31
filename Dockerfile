@@ -52,3 +52,4 @@ CMD ["python", "/app/main.py", "--config", "/app/configuration.json"]
 FROM base AS with_codebase
 
 COPY ./codebase /app/codebase
+COPY ./codebase_staging /app/codebase_staging
