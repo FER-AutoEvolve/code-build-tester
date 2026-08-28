@@ -8,6 +8,7 @@ import logging
 import threading
 from api_server.dtos import BuildResultDto
 import keypoint_notification
+import experiment_notification
 
 @dataclasses.dataclass(frozen=False)
 class ApiServer:
@@ -83,8 +84,33 @@ class ApiServer:
             self._logger.info(f"Received build request. Starting build procedure...")
             
             self._logger.keypoint(f"Received build request", event_type=keypoint_notification.EventTypes.INFO)
+            self._logger.experiment(
+                experiment_notification.format_experiment_event_message("REQ_TO_TESTBUILDER_RECEIVED"),
+                event_type=experiment_notification.ExperimentEventTypes.INFO,
+            )
+
+            self._logger.experiment(
+                experiment_notification.format_experiment_event_message("CODE_IN_BUILDTESTING"),
+                event_type=experiment_notification.ExperimentEventTypes.INFO,
+            )
+
             res_build = self._code_builder.build()
             build_result_dto: BuildResultDto = BuildResultDto(True, None) if res_build.is_ok() else BuildResultDto(False, res_build.message)
+
+            completed_payload = {
+                "status": "SUCCESS" if res_build.is_ok() else "FAILURE",
+                "message": res_build.message if res_build.is_err() else "Build succeeded",
+            }
+
+            self._logger.experiment(
+                experiment_notification.format_experiment_event_message("COMPLETED", completed_payload),
+                event_type=experiment_notification.ExperimentEventTypes.SUCCESS if res_build.is_ok() else experiment_notification.ExperimentEventTypes.FAILURE,
+            )
+
+            self._logger.experiment(
+                experiment_notification.format_experiment_event_message("REQ_TO_OVERSEER_SENT", build_result_dto.to_dict()),
+                event_type=experiment_notification.ExperimentEventTypes.INFO,
+            )
 
             if res_build.is_err():
                 self._logger.keypoint(f"Code build failed", event_type=keypoint_notification.EventTypes.FAILURE)

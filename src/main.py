@@ -9,6 +9,7 @@ from code_building import CodeBuilder
 from core import Result, Unit
 from configuration import Configuration
 import keypoint_notification
+import experiment_notification
 
 def main(configuration_file_path: str) -> Result[Unit]:
     '''
@@ -22,48 +23,69 @@ def main(configuration_file_path: str) -> Result[Unit]:
     '''
     logging.info(f"Program starting with configuration file path: {configuration_file_path}")
 
-    # Load the configuration file
     config: Configuration = None
-    with open(configuration_file_path, "r") as config_file:
-        config_json = json.load(config_file)
-        config_res = Configuration.from_dict(config_json)
-        if config_res.is_err():
-            logging.error(f"Failed to load configuration")
-            return Result.err("Failed to load configuration")
-        config = config_res.unwrap()
+    component_started = False
+    try:
+        # Load the configuration file
+        with open(configuration_file_path, "r") as config_file:
+            config_json = json.load(config_file)
+            config_res = Configuration.from_dict(config_json)
+            if config_res.is_err():
+                logging.error(f"Failed to load configuration")
+                return Result.err("Failed to load configuration")
+            config = config_res.unwrap()
 
-    logging.info(f"Configuration file loaded successfully")
+        logging.info(f"Configuration file loaded successfully")
 
-    # Setup keypoint notification
-    if config.keypoint_notification_config is not None:
-        keypoint_notification.configure_keypoint_notifier(config.keypoint_notification_config)
-        logging.info(f"Keypoint notification configured successfully")
-    else:
-        logging.info(f"No keypoint notification configuration found, skipping keypoint notification setup")
+        # Setup keypoint notification
+        if config.keypoint_notification_config is not None:
+            keypoint_notification.configure_keypoint_notifier(config.keypoint_notification_config)
+            logging.info(f"Keypoint notification configured successfully")
+        else:
+            logging.info(f"No keypoint notification configuration found, skipping keypoint notification setup")
 
-    # Get code builder
-    res_code_builder = CodeBuilder.get_code_builder(config.code_builder_config)
-    if res_code_builder.is_err():
-        logging.error(f"Failed to create code builder")
-    code_builder = res_code_builder.value
+        # Setup experiment notification
+        if config.experiment_notification_config is not None:
+            experiment_notification.configure_experiment_notifier(config.experiment_notification_config)
+            logging.info(f"Experiment notification configured successfully")
+            logging.getLogger().experiment(
+                experiment_notification.format_experiment_event_message("COMPONENT_START"),
+                event_type=experiment_notification.ExperimentEventTypes.INFO,
+            )
+            component_started = True
+        else:
+            logging.info(f"No experiment notification configuration found, skipping experiment notification setup")
 
-    # start the Fast API server
-    server = ApiServer(config.fast_api_config, code_builder, logging.getLogger())
-    # block the current thread if starting the server was successful
-    res_server_start = server.start_server()
-    if res_server_start.is_err():
-        logging.error(f"Error starting the FastAPI server: {res_server_start.message}")
-        return Result.err(res_server_start.message)
-    logging.info(f"FastAPI server started successfully")
+        # Get code builder
+        res_code_builder = CodeBuilder.get_code_builder(config.code_builder_config)
+        if res_code_builder.is_err():
+            logging.error(f"Failed to create code builder")
+            return Result.err(res_code_builder.message)
+        code_builder = res_code_builder.value
 
+        # start the Fast API server
+        server = ApiServer(config.fast_api_config, code_builder, logging.getLogger())
         # block the current thread if starting the server was successful
-    res_server_wait = server.wait_for_server_to_stop()
-    if res_server_wait.is_err():
-        logging.error(f"Error while running FastAPI server: {res_server_wait.message}")
-        return Result.err(res_server_wait.message)
+        res_server_start = server.start_server()
+        if res_server_start.is_err():
+            logging.error(f"Error starting the FastAPI server: {res_server_start.message}")
+            return Result.err(res_server_start.message)
+        logging.info(f"FastAPI server started successfully")
 
-    logging.info(f"Program ended successfully")
-    return Result.ok(Unit())
+            # block the current thread if starting the server was successful
+        res_server_wait = server.wait_for_server_to_stop()
+        if res_server_wait.is_err():
+            logging.error(f"Error while running FastAPI server: {res_server_wait.message}")
+            return Result.err(res_server_wait.message)
+
+        logging.info(f"Program ended successfully")
+        return Result.ok(Unit())
+    finally:
+        if config is not None and config.experiment_notification_config is not None and component_started:
+            logging.getLogger().experiment(
+                experiment_notification.format_experiment_event_message("COMPONENT_STOP"),
+                event_type=experiment_notification.ExperimentEventTypes.INFO,
+            )
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser()
