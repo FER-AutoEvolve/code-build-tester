@@ -52,10 +52,10 @@ RUN rm /app/configuration.template.json
 
 EXPOSE ${FASTAPI_PORT}
 
-CMD python /app/main.py --config /app/configuration.json
+CMD ["python", "/app/main.py", "--config", "/app/configuration.json"]
 
-# with_local_codebase stage: includes codebase directory
-FROM base AS with_local_codebase
+# with_codebase stage: includes codebase directory
+FROM base AS with_codebase
 
 COPY ./codebase /app/codebase
 COPY ./codebase_staging /app/codebase_staging
