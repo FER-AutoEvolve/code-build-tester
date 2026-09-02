@@ -108,7 +108,10 @@ class ApiServer:
             )
 
             self._logger.experiment(
-                experiment_notification.format_experiment_event_message("REQ_TO_OVERSEER_SENT", build_result_dto.to_dict()),
+                experiment_notification.format_experiment_event_message(
+                    "REQ_TO_OVERSEER_SENT",
+                    {"payload": build_result_dto.to_dict()},
+                ),
                 event_type=experiment_notification.ExperimentEventTypes.INFO,
             )
 
